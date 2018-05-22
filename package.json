@@ -1,0 +1,14 @@
+{
+  "name": "yourskills",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "express": "~4.16.0",
+    "firebase-admin": "^5.12.1",
+    "mysql2": "^1.5.3",
+    "sequelize": "^4.37.8"
+  }
+}
