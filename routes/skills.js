@@ -18,14 +18,14 @@ skills.getSkills = function (request, response)
     {
         query =
             'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
-            'skills.description AS skillDescription, skills.skillsCategoryId AS skillCategoryId, ' +
+            'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
             'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
             'userSkills.mark, userSkills.disposition, userSkills.date ' +
             'FROM userSkills ' +
             'JOIN skills ' +
             'ON skills.id = userSkills.skillId ' +
             'JOIN skillsCategories ' +
-            'ON skillsCategories.id = skills.skillsCategoryId ' +
+            'ON skillsCategories.id = skills.categoryId ' +
             'WHERE userSkills.userId = "' + request['token']['user_id'] + '" ' +
             'AND userSkills.skillId = ' + request.query['skillId'];
     }
@@ -33,19 +33,20 @@ skills.getSkills = function (request, response)
     {
         query =
             'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
-            'skills.description AS skillDescription, skills.skillsCategoryId AS skillCategoryId, ' +
+            'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
             'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
             'userSkills.mark, userSkills.disposition, userSkills.date ' +
             'FROM userSkills ' +
             'JOIN skills ' +
             'ON skills.id = userSkills.skillId ' +
             'JOIN skillsCategories ' +
-            'ON skillsCategories.id = skills.skillsCategoryId ' +
+            'ON skillsCategories.id = skills.categoryId ' +
             'WHERE userSkills.date = (' +
             'SELECT MAX(us.date) ' +
             'FROM userSkills AS us ' +
             'WHERE us.userId = "' + request['token']['user_id'] + '" ' +
-            'AND us.skillId = userSkills.skillId)';
+            'AND us.skillId = userSkills.skillId) ' +
+            'GROUP BY userSkills.skillId';
     }
 
     // Send query and generate response;

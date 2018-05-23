@@ -26,7 +26,7 @@ const UserSkills = sequelize.define('userSkills', {
 });
 
 // Add foreign keys;
-UserSkills.belongsTo(require('./skills'));
+UserSkills.belongsTo(require('./skills'), { as: 'skill' });
 
 // Sync model;
 UserSkills.sync();

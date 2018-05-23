@@ -20,7 +20,7 @@ const Skills = sequelize.define('skills', {
 });
 
 // Add foreign keys;
-Skills.belongsTo(require('./skills-categories'));
+Skills.belongsTo(require('./skills-categories'), { as: 'category' });
 
 // Sync model;
 Skills.sync();
