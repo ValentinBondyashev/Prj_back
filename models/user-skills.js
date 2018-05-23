@@ -1,18 +1,21 @@
 // Generate model;
-const UserSkills = sequelize.define('skills', {
+const UserSkills = sequelize.define('userSkills', {
     id: {
         type: Sequelize.DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
     },
     userId: {
-        type: Sequelize.DataTypes.STRING(32)
-    },
-    skillId: {
-        type: Sequelize.DataTypes.INTEGER
+        type: Sequelize.DataTypes.STRING(32),
+        allowNull: false
     },
     mark: {
-        type: Sequelize.DataTypes.INTEGER(4)
+        type: Sequelize.DataTypes.SMALLINT.UNSIGNED,
+        allowNull: false
+    },
+    disposition: {
+        type: Sequelize.DataTypes.SMALLINT.UNSIGNED,
+        allowNull: false
     },
     date: {
         type: Sequelize.DataTypes.DATE,
@@ -21,6 +24,9 @@ const UserSkills = sequelize.define('skills', {
 }, {
     timestamps: false
 });
+
+// Add foreign keys;
+UserSkills.belongsTo(require('./skills'));
 
 // Sync model;
 UserSkills.sync();

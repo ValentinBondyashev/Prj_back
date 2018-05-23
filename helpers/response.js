@@ -12,7 +12,7 @@ const responseHelper = {
     // Function for updating response with error;
     setResponseError: function(error)
     {
-        this.responseData = { status: 'error', error: error };
+        this.responseData = { status: 'error', message: error };
     },
 
     // Function for updating response data;

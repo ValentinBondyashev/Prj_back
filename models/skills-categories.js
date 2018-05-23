@@ -1,5 +1,5 @@
 // Generate model;
-const Skills = sequelize.define('skills', {
+const SkillsCategories = sequelize.define('skillsCategories', {
     id: {
         type: Sequelize.DataTypes.INTEGER,
         autoIncrement: true,
@@ -19,11 +19,8 @@ const Skills = sequelize.define('skills', {
     timestamps: false
 });
 
-// Add foreign keys;
-Skills.belongsTo(require('./skills-categories'));
-
 // Sync model;
-Skills.sync();
+SkillsCategories.sync();
 
 // Export model;
-module.exports = Skills;
+module.exports = SkillsCategories;
