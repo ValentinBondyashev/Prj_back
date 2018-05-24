@@ -21,8 +21,8 @@ const UserSkills = sequelize.define('userSkills', {
         type: Sequelize.DataTypes.STRING(256)
     },
     date: {
-        type: Sequelize.DataTypes.DATE,
-        defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+        type: Sequelize.DataTypes.DATEONLY,
+        defaultValue: Sequelize.NOW
     }
 }, {
     timestamps: false

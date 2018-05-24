@@ -89,17 +89,34 @@ skills.addSkills = function (request, response)
     delete request['body']['id'];
     delete request['body']['date'];
 
-    // Try create new skill;
-    UserSkills.create(request['body']).then((data) =>
+    // Try create or update skill;
+    UserSkills.findOne({
+        where: {
+            userId: request['body']['userId'],
+            skillId: request['body']['skillId'],
+            date: Sequelize.fn('CURDATE')
+        }
+    }).then((row) =>
     {
-        response.status(200);
-        responseHelper.setResponseData({ 'id': data['dataValues']['id'] });
-        responseHelper.sendResponse(response);
-    }).catch((error) =>
+        row.update(request['body']).then(() =>
+        {
+            response.status(200);
+            responseHelper.setResponseData({ 'id': row.id });
+            responseHelper.sendResponse(response);
+        });
+    }).catch(() =>
     {
-        response.status(400);
-        responseHelper.setResponseError(error.message);
-        responseHelper.sendResponse(response);
+        UserSkills.create(request['body']).then((data) =>
+        {
+            response.status(200);
+            responseHelper.setResponseData({ 'id': data['dataValues']['id'] });
+            responseHelper.sendResponse(response);
+        }).catch((error) =>
+        {
+            response.status(400);
+            responseHelper.setResponseError(error.message);
+            responseHelper.sendResponse(response);
+        });
     });
 };
 
