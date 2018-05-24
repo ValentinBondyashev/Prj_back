@@ -27,7 +27,8 @@ skills.getSkills = function (request, response)
             'JOIN skillsCategories ' +
             'ON skillsCategories.id = skills.categoryId ' +
             'WHERE userSkills.userId = "' + request['token']['user_id'] + '" ' +
-            'AND userSkills.skillId = ' + request.query['skillId'];
+            'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
+            'ORDER BY skills.categoryId';
     }
     else
     {
@@ -46,7 +47,8 @@ skills.getSkills = function (request, response)
             'FROM userSkills AS us ' +
             'WHERE us.userId = "' + request['token']['user_id'] + '" ' +
             'AND us.skillId = userSkills.skillId) ' +
-            'GROUP BY userSkills.skillId';
+            'GROUP BY userSkills.skillId ' +
+            'ORDER BY skills.categoryId';
     }
 
     // Send query and generate response;
