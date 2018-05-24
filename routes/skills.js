@@ -20,7 +20,7 @@ skills.getSkills = function (request, response)
             'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
             'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
             'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
-            'userSkills.mark, userSkills.disposition, userSkills.date ' +
+            'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
             'FROM userSkills ' +
             'JOIN skills ' +
             'ON skills.id = userSkills.skillId ' +
@@ -36,7 +36,7 @@ skills.getSkills = function (request, response)
             'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
             'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
             'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
-            'userSkills.mark, userSkills.disposition, userSkills.date ' +
+            'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
             'FROM userSkills ' +
             'JOIN skills ' +
             'ON skills.id = userSkills.skillId ' +
