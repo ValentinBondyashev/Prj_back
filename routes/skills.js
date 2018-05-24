@@ -85,6 +85,10 @@ skills.addSkills = function (request, response)
     // Set user id from token;
     request['body']['userId'] = request['token']['user_id'];
 
+    // Remove unwanted data from request data;
+    delete request['body']['id'];
+    delete request['body']['date'];
+
     // Try create new skill;
     UserSkills.create(request['body']).then((data) =>
     {
