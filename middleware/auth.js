@@ -7,7 +7,7 @@ const responseHelper = require('../helpers/response');
 // Method handler for intercept request with auth;
 function auth(request, response, next)
 {
-    if (!request.headers['bearer'])
+    if (!request.headers['authorization'])
     {
         response.status(400);
         responseHelper.setResponseError('Token does not exist!');
@@ -15,7 +15,7 @@ function auth(request, response, next)
     }
     else
     {
-        firebase.auth().verifyIdToken(request.headers['bearer']).then((token) =>
+        firebase.auth().verifyIdToken(request.headers['authorization'].replace('Bearer ', '')).then((token) =>
         {
             request.token = token;
             next();
