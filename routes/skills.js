@@ -4,6 +4,7 @@ const responseHelper = require('../helpers/response');
 // Initialize models;
 const Skills = require('../models/skills');
 const UserSkills = require('../models/user-skills');
+const SkillsCategories = require('../models/skills-categories');
 
 // Initialize skills class;
 const skills = {};
@@ -135,7 +136,6 @@ skills.getSkillsList = function (request, response)
 skills.createNewSkill = async function (request, response) 
 {
     let skillTitle = request['body']['skillTitle'];
-    
 
     try {
         let needSkill = await Skills.find({
@@ -174,6 +174,20 @@ skills.createNewSkill = async function (request, response)
         response.status(500);
         responseHelper.sendResponse(response);
     }
+}
+
+skills.getCategoriesSkills = async function (request, response) 
+{
+    try {
+        let res = await SkillsCategories.findAll();
+        response.status(200);
+        responseHelper.setResponseData(res);
+        responseHelper.sendResponse(response);
+    } catch (error) {
+        response.status(500);
+        responseHelper.sendResponse(response);
+    }
+    
 }
 
 // Export router;

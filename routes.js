@@ -11,6 +11,7 @@ const test = require('./routes/test');
 
 // Add routes to router;
 router.get('/skills/', authMiddleware, skills.getSkills);
+router.get('/skills/categories', authMiddleware, skills.getCategoriesSkills);
 router.put('/skills/', authMiddleware, skills.addSkills);
 router.post('/skills/', authMiddleware, skills.createNewSkill);
 router.get('/skills/list', skills.getSkillsList);
