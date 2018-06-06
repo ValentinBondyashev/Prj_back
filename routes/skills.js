@@ -63,6 +63,7 @@ skills.getSkills = function (request, response)
 // Method for add skills;
 skills.addSkills = function (request, response)
 {
+    
     // Check request data;
     if (!request['body']['mark'] || (request['body']['mark'] < 0 || request['body']['mark'] > 10))
     {
@@ -130,6 +131,50 @@ skills.getSkillsList = function (request, response)
         responseHelper.sendResponse(response);
     });
 };
+
+skills.createNewSkill = async function (request, response) 
+{
+    let skillTitle = request['body']['skillTitle'];
+    
+
+    try {
+        let needSkill = await Skills.find({
+            where: {
+                title: skillTitle
+            }
+        });
+
+        console.log(needSkill);
+        let skill = {};
+        if(needSkill == null) {
+            let newSkill = {
+                title: skillTitle,
+                description: "",
+                categoryId: request['body']['categoryId']
+            };
+            skill = await Skills.create(newSkill);
+        } else {
+            skill = await Skills.find({
+                id: needSkill['id']
+            });
+        }
+
+        let newSkill = await UserSkills.create({
+            userId: request['token']['user_id'],
+            mark: request['body']['skillTitle'] ,
+            disposition: request['body']['disposition'],
+            comment: request['body']['comment'],
+            skillId: skill['id']
+        });
+        response.status(200);
+        responseHelper.setResponseData(newSkill);
+        responseHelper.sendResponse(response);
+
+    } catch (error) {
+        response.status(500);
+        responseHelper.sendResponse(response);
+    }
+}
 
 // Export router;
 module.exports = skills;
