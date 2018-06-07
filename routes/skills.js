@@ -10,7 +10,7 @@ const SkillsCategories = require('../models/skills-categories');
 const skills = {};
 
 // Method for get skills data;
-skills.getSkills = function (request, response)
+skills.getSkills = async function (request, response)
 {
     // Create request query;
     let query = '';
@@ -50,13 +50,23 @@ skills.getSkills = function (request, response)
             'AND us.skillId = userSkills.skillId) ' +
             'GROUP BY userSkills.skillId ' +
             'ORDER BY skills.categoryId';
+       
     }
 
     // Send query and generate response;
     sequelize.query(query).then((userSkills) =>
     {
+        let other = {}, letter;
+
+        for (let i=0; i < userSkills[0].length; i++) {
+            letter = userSkills[0][i]['skillCategoryTitle'];
+            if (!(letter in other))
+                other[letter] = [];
+
+            other[letter].push(userSkills[0][i]);
+        }
         response.status(200);
-        responseHelper.setResponseData(userSkills[0]);
+        responseHelper.setResponseData(other);
         responseHelper.sendResponse(response);
     });
 };
@@ -143,8 +153,6 @@ skills.createNewSkill = async function (request, response)
                 title: skillTitle
             }
         });
-
-        console.log(needSkill);
         let skill = {};
         if(needSkill == null) {
             let newSkill = {
