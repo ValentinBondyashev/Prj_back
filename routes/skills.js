@@ -160,7 +160,7 @@ skills.createNewSkill = async function (request, response)
 
         let newSkill = await UserSkills.create({
             userId: request['token']['user_id'],
-            mark: request['body']['skillTitle'] ,
+            mark: request['body']['mark'] ,
             disposition: request['body']['disposition'],
             comment: request['body']['comment'],
             skillId: skill['id']
