@@ -62,15 +62,13 @@ skills.getSkills = async function (request, response)
         
         let queryString = "";
         for(let i=0; i < skills.length; i++) {
-            queryString = queryString + `('${request['token']['user_id']}', 0, 0, '', ${ Date.now() },${skills[i]['id']}), `;
+            queryString = queryString + `('${request['token']['user_id']}', 1, 1, '', ${ Date.now() },${skills[i]['id']}), `;
         }
        
         queryString = queryString.slice(0,-2);
         queryString += ';';
 
         queryString = "INSERT INTO userSkills (userId, mark, disposition, comment, date, skillId) VALUES " + queryString;
-
-        console.log("QUERY ----->>>>>>>>>>>>>>>>>>>>>>>. ", queryString);
 
         let res = await sequelize.query(queryString);
 
