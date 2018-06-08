@@ -54,12 +54,37 @@ skills.getSkills = async function (request, response)
     }
 
     // Send query and generate response;
-    sequelize.query(query).then((userSkills) =>
-    {
+    let userSkills = await sequelize.query(query);
+
+    if (userSkills[0].length == 0) {
+        let skills = await Skills.findAll();
+        
+        
+        let queryString = "";
+        for(let i=0; i < skills.length; i++) {
+            queryString = queryString + `('${request['token']['user_id']}', 0, 0, '', ${ Date.now() },${skills[i]['id']}), `;
+        }
+       
+        queryString = queryString.slice(0,-2);
+        queryString += ';';
+
+        queryString = "INSERT INTO userSkills (userId, mark, disposition, comment, date, skillId) VALUES " + queryString;
+
+        console.log("QUERY ----->>>>>>>>>>>>>>>>>>>>>>>. ", queryString);
+
+        let res = await sequelize.query(queryString);
+
+        userSkills = await sequelize.query(query);
+
         response.status(200);
         responseHelper.setResponseData(userSkills[0]);
         responseHelper.sendResponse(response);
-    });
+
+    } else {
+        response.status(200);
+        responseHelper.setResponseData(userSkills[0]);
+        responseHelper.sendResponse(response);
+    }
 };
 
 // Method for add skills;
