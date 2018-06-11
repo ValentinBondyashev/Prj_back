@@ -1,6 +1,6 @@
 // Initialize response helper;
 const responseHelper = require('../helpers/response');
-
+var moment = require('moment');
 // Initialize models;
 const Skills = require('../models/skills');
 const UserSkills = require('../models/user-skills');
@@ -62,13 +62,13 @@ skills.getSkills = async function (request, response)
         
         let queryString = "";
         for(let i=0; i < skills.length; i++) {
-            queryString = queryString + `('${request['token']['user_id']}', 1, 1, '', ${ Date.now() },${skills[i]['id']}), `;
+            queryString = queryString + `('${request['token']['user_id']}', 1, 1, '', CURDATE() ,${skills[i]['id']}), `;
         }
        
         queryString = queryString.slice(0,-2);
         queryString += ';';
 
-        queryString = "INSERT INTO userSkills (userId, mark, disposition, comment, date, skillId) VALUES " + queryString;
+        queryString = "INSERT INTO userSkills (userId, mark, disposition, comment, date ,skillId) VALUES " + queryString;
 
         let res = await sequelize.query(queryString);
 
@@ -90,7 +90,7 @@ skills.addSkills = function (request, response)
 {
     
     // Check request data;
-    if (!request['body']['mark'] || (request['body']['mark'] < 0 || request['body']['mark'] > 10))
+    if (!request['body']['mark'] || (request['body']['mark'] < -1 || request['body']['mark'] > 10))
     {
         response.status(400);
         responseHelper.setResponseError('Mark must have value from 0 to 10!');
@@ -98,8 +98,8 @@ skills.addSkills = function (request, response)
 
         return;
     }
-
-    if (!request['body']['disposition'] || (request['body']['disposition'] < 0 || request['body']['disposition'] > 10))
+    console.log(request['body']['disposition']);
+    if (request['body']['disposition'] === undefined || (request['body']['disposition'] < -1 || request['body']['disposition'] > 10))
     {
         response.status(400);
         responseHelper.setResponseError('Disposition must have value from 0 to 10!');
