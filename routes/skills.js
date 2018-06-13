@@ -69,7 +69,7 @@ skills.getSkills = async function (request, response)
             'ON skills.id = userSkills.skillId ' +
             'JOIN skillsCategories ' +
             'ON skillsCategories.id = skills.categoryId ' +
-            'WHERE userSkills.userId = "' + request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'] + '" ' +
+            'WHERE userSkills.userId = "' + (request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id']) + '" ' +
             'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
             'ORDER BY skills.categoryId';
     }
@@ -88,7 +88,7 @@ skills.getSkills = async function (request, response)
             'WHERE userSkills.date = (' +
             'SELECT MAX(us.date) ' +
             'FROM userSkills AS us ' +
-            'WHERE userSkills.userId = "' + request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'] + '" ' +
+            'WHERE userSkills.userId = "' + (request.query['user_id'] == undefined ? request['token']['user_id'] : request.query['user_id']) + '" ' +
             'AND userSkills.skillId = userSkills.skillId ) ' +
             'GROUP BY userSkills.skillId ' +
             'ORDER BY skills.categoryId';
