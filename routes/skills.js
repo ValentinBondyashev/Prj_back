@@ -5,16 +5,57 @@ var moment = require('moment');
 const Skills = require('../models/skills');
 const UserSkills = require('../models/user-skills');
 const SkillsCategories = require('../models/skills-categories');
+const Admins = require('../models/admins');
 
 // Initialize skills class;
 const skills = {};
+// Initialize firebase;
+const firebase = require('firebase-admin');
+
+// Get All Users
+skills.getAllUsers = async function (request, response)
+{
+    
+    let admin = await Admins.findAll({
+        where: {
+            admin_firebase_id: request['token']['user_id']
+        }
+    });
+
+    if(admin.length == 0) {
+        response.status(403);
+        responseHelper.setResponseError('No access!');
+        responseHelper.sendResponse(response);
+    }
+
+    firebase.auth().listUsers(1000).then((listUsersResult) => {
+        response.status(200);
+        responseHelper.setResponseData(listUsersResult);
+        responseHelper.sendResponse(response);
+    });
+     
+}
+
 
 // Method for get skills data;
 skills.getSkills = async function (request, response)
 {
     // Create request query;
     let query = '';
-    console.log("TOKEN ------------> ", request['token']['user_id']);
+    
+    if(request.query['user_id']) {
+        let admin = await Admins.findAll({
+            where: {
+                admin_firebase_id: request['token']['user_id']
+            }
+        });
+    
+        if(admin.length == 0) {
+            response.status(403);
+            responseHelper.setResponseError('No access!');
+            responseHelper.sendResponse(response);
+        }
+    }
 
     if (request.query['skillId'])
     {
@@ -28,7 +69,7 @@ skills.getSkills = async function (request, response)
             'ON skills.id = userSkills.skillId ' +
             'JOIN skillsCategories ' +
             'ON skillsCategories.id = skills.categoryId ' +
-            'WHERE userSkills.userId = "' + request['token']['user_id'] + '" ' +
+            'WHERE userSkills.userId = "' + request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'] + '" ' +
             'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
             'ORDER BY skills.categoryId';
     }
@@ -47,7 +88,7 @@ skills.getSkills = async function (request, response)
             'WHERE userSkills.date = (' +
             'SELECT MAX(us.date) ' +
             'FROM userSkills AS us ' +
-            'WHERE userSkills.userId = "' + request['token']['user_id'] + '" ' +
+            'WHERE userSkills.userId = "' + request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'] + '" ' +
             'AND userSkills.skillId = userSkills.skillId ) ' +
             'GROUP BY userSkills.skillId ' +
             'ORDER BY skills.categoryId';
@@ -63,7 +104,7 @@ skills.getSkills = async function (request, response)
         
         let queryString = "";
         for(let i=0; i < skills.length; i++) {
-            queryString = queryString + `('${request['token']['user_id']}', 1, 1, '', CURDATE() ,${skills[i]['id']}), `;
+            queryString = queryString + `('${request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id']}', 1, 1, '', CURDATE() ,${skills[i]['id']}), `;
         }
        
         queryString = queryString.slice(0,-2);
@@ -87,8 +128,21 @@ skills.getSkills = async function (request, response)
 };
 
 // Method for add skills;
-skills.addSkills = function (request, response)
+skills.addSkills = async function (request, response)
 {
+    if(request.query['user_id']) {
+        let admin = await Admins.findAll({
+            where: {
+                admin_firebase_id: request['token']['user_id']
+            }
+        });
+    
+        if(admin.length == 0) {
+            response.status(403);
+            responseHelper.setResponseError('No access!');
+            responseHelper.sendResponse(response);
+        }
+    }
     console.log("TOKEN ------------> ", request['token']['user_id']);
     // Check request data;
     if (!request['body']['mark'] || (request['body']['mark'] < -1 || request['body']['mark'] > 10))
@@ -110,7 +164,7 @@ skills.addSkills = function (request, response)
     }
 
     // Set user id from token;
-    request['body']['userId'] = request['token']['user_id'];
+    request['body']['userId'] = request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'];
 
     // Remove unwanted data from request data;
     delete request['body']['id'];
@@ -160,6 +214,19 @@ skills.getSkillsList = function (request, response)
 
 skills.createNewSkill = async function (request, response) 
 {
+    if(request.query['user_id']) {
+        let admin = await Admins.findAll({
+            where: {
+                admin_firebase_id: request['token']['user_id']
+            }
+        });
+    
+        if(admin.length == 0) {
+            response.status(403);
+            responseHelper.setResponseError('No access!');
+            responseHelper.sendResponse(response);
+        }
+    }
     let skillTitle = request['body']['skillTitle'];
 
     try {
@@ -183,7 +250,7 @@ skills.createNewSkill = async function (request, response)
         }
 
         let newSkill = await UserSkills.create({
-            userId: request['token']['user_id'],
+            userId: request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'],
             mark: request['body']['mark'] ,
             disposition: request['body']['disposition'],
             comment: request['body']['comment'],
