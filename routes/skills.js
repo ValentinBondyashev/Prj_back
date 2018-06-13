@@ -14,6 +14,7 @@ skills.getSkills = async function (request, response)
 {
     // Create request query;
     let query = '';
+    console.log("TOKEN ------------> ", request['token']['user_id']);
 
     if (request.query['skillId'])
     {
@@ -46,8 +47,8 @@ skills.getSkills = async function (request, response)
             'WHERE userSkills.date = (' +
             'SELECT MAX(us.date) ' +
             'FROM userSkills AS us ' +
-            'WHERE us.userId = "' + request['token']['user_id'] + '" ' +
-            'AND us.skillId = userSkills.skillId) ' +
+            'WHERE userSkills.userId = "' + request['token']['user_id'] + '" ' +
+            'AND userSkills.skillId = userSkills.skillId ) ' +
             'GROUP BY userSkills.skillId ' +
             'ORDER BY skills.categoryId';
        
@@ -88,7 +89,7 @@ skills.getSkills = async function (request, response)
 // Method for add skills;
 skills.addSkills = function (request, response)
 {
-    
+    console.log("TOKEN ------------> ", request['token']['user_id']);
     // Check request data;
     if (!request['body']['mark'] || (request['body']['mark'] < -1 || request['body']['mark'] > 10))
     {
