@@ -12,6 +12,31 @@ const skills = {};
 // Initialize firebase;
 const firebase = require('firebase-admin');
 
+
+// Get All Users
+skills.checkAdmin = async function (request, response)
+{
+    
+    let admin = await Admins.findAll({
+        where: {
+            admin_firebase_id: request['token']['user_id']
+        }
+    });
+
+    if(admin.length == 0) {
+        response.status(200);
+        responseHelper.setResponseError({isAdmin: false});
+        responseHelper.sendResponse(response);
+    } else {
+        response.status(200);
+        responseHelper.setResponseError({isAdmin: true});
+        responseHelper.sendResponse(response);
+    }
+
+   
+     
+}
+
 // Get All Users
 skills.getAllUsers = async function (request, response)
 {

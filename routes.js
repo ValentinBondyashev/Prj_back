@@ -16,5 +16,6 @@ router.put('/skills', authMiddleware, skills.addSkills);
 router.post('/skills', authMiddleware, skills.createNewSkill);
 router.get('/skills/list', skills.getSkillsList);
 router.get('/skills/all_users', authMiddleware, skills.getAllUsers);
+router.get('/skills/check_admin', authMiddleware, skills.checkAdmin);
 // Export router;
 module.exports = router;
