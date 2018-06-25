@@ -3,6 +3,20 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 // const cors = require('cors');
+const ws = require('ws');
+
+let WebSocket = ws.Server;
+let  wss = new WebSocket({port: 8800});
+
+wss.on('connection', function (ws) {
+    ws.on('message', function (message) {
+
+        wss.clients.forEach(client => {
+            client.send(message);
+        });
+    });
+});
+
 
 // Initialize firebase;
 const firebase = require('firebase-admin');
