@@ -1,22 +1,31 @@
 // Initialize express;
+require('dotenv').config({path: './.env'})
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-// const cors = require('cors');
+const OnSkillUpdateEvent = require('./app/Events/OnSkillUpdate');
+const logSkills  = require('./app/Controllers/skills').getSkillsLogs;
 const ws = require('ws');
 
 let WebSocket = ws.Server;
-let  wss = new WebSocket({port: 8800});
+let  WebSocketServer = new WebSocket({port: 8800});
 
-wss.on('connection', function (ws) {
-    ws.on('message', function (message) {
+WebSocketServer.on('connection', function connection(ws) {
 
-        wss.clients.forEach(client => {
-            client.send(message);
-        });
-    });
+
 });
 
+
+OnSkillUpdateEvent.on('update_skill', async function(){
+    var skills = await logSkills();
+    console.log(skills);
+
+    WebSocketServer.clients.forEach(client => {
+
+        client.send(skills);
+    });
+
+});
 
 // Initialize firebase;
 const firebase = require('firebase-admin');
@@ -39,15 +48,12 @@ app.use(function (req, res, next)
 app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 app.use(bodyParser.json());
 
-// Add access control allow origin header;
 
-
-// Initialize database;
-global.Sequelize = require('sequelize');
-global.sequelize = new Sequelize('mysql://avadak00_skills:cjxr8b38@avadak00.mysql.tools:3306/avadak00_skills');
 
 // Create routes;
-app.use(require('./routes'));
+app.use(require('./routes/web'));
 
-// Return api routes;
-module.exports = app;
+app.listen(3010, function () {
+    console.log('running');
+});
+

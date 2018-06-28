@@ -1,12 +1,15 @@
 // Initialize response helper;
-const responseHelper = require('../helpers/response');
-var moment = require('moment');
+const responseHelper = require('../../helpers/response');
 // Initialize models;
-const Skills = require('../models/skills');
-const UserSkills = require('../models/user-skills');
-const SkillsCategories = require('../models/skills-categories');
-const Admins = require('../models/admins');
-
+const globalModel =  require('./../Models/index');
+const Skills = globalModel.skills;
+const UserSkills = globalModel.userSkills;
+const SkillsCategories = globalModel.skillsCategories;
+const Admins = globalModel.admins;
+const skillLogs = globalModel.user_skills_logs;
+const sequelize = globalModel.sequelize;
+const Sequelize = globalModel.Sequelize;
+const Emitter = require('./../Events/OnSkillUpdate');
 // Initialize skills class;
 const skills = {};
 // Initialize firebase;
@@ -152,22 +155,16 @@ skills.getSkills = async function (request, response)
     }
 };
 
+
+skills.updateSkill = async function(request, response)
+{
+
+};
+
 // Method for add skills;
 skills.addSkills = async function (request, response)
 {
-    if(request.query['user_id']) {
-        let admin = await Admins.findAll({
-            where: {
-                admin_firebase_id: request['token']['user_id']
-            }
-        });
-    
-        if(admin.length == 0) {
-            response.status(403);
-            responseHelper.setResponseError('No access!');
-            responseHelper.sendResponse(response);
-        }
-    }
+
     console.log("TOKEN ------------> ", request['token']['user_id']);
     // Check request data;
     if (!request['body']['mark'] || (request['body']['mark'] < -1 || request['body']['mark'] > 10))
@@ -196,37 +193,38 @@ skills.addSkills = async function (request, response)
     delete request['body']['date'];
 
     // Try create or update skill;
-    UserSkills.findOne({
+    let userSkills = await UserSkills.findOne({
         where: {
             userId: request['body']['userId'],
-            skillId: request['body']['skillId'],
-            date: Sequelize.fn('CURDATE')
+            skillId: request['body']['skillId']
         }
-    }).then((row) =>
-    {
-        row.update(request['body']).then(() =>
-        {
-            response.status(200);
-            responseHelper.setResponseData({ 'id': row.id });
-            responseHelper.sendResponse(response);
-        });
-    }).catch(() =>
-    {
-        UserSkills.create(request['body']).then((data) =>
-        {
-            response.status(200);
-            responseHelper.setResponseData({ 'id': data['dataValues']['id'] });
-            responseHelper.sendResponse(response);
-        }).catch((error) =>
-        {
-            response.status(400);
-            responseHelper.setResponseError(error.message);
-            responseHelper.sendResponse(response);
-        });
     });
+
+    if(userSkills)
+    {
+        skillLogs.create({
+            userId:userSkills.userId,
+            skillId:userSkills.id,
+            skill_old: userSkills.mark,
+            skill_new: request.body.mark
+        });
+
+        userSkills.update({
+            mark:request.body.mark
+        });
+        Emitter.emit('update_skill');
+        response.send(userSkills);
+    }else{
+        response.status(400);
+        resposne.send({
+            success:false,
+            message:'Such skill for this user does not exist'
+        });
+    }
+
+
 };
 
-// Method for get skills list data;
 skills.getSkillsList = function (request, response)
 {
     Skills.findAll().then((skills) =>
@@ -303,7 +301,20 @@ skills.getCategoriesSkills = async function (request, response)
         responseHelper.sendResponse(response);
     }
     
-}
+};
+
+skills.getSkillsLogs = async function()
+{
+    var logSkills = await skillLogs.findAll({
+       order:[
+           ['updatedAt','DESC']
+       ],
+        raw: true,
+        include:[UserSkills]
+    });
+
+    return JSON.stringify(logSkills);
+};
 
 // Export router;
 module.exports = skills;
