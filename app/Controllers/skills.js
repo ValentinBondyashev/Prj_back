@@ -14,6 +14,9 @@ const Emitter = require('./../Events/OnSkillUpdate');
 const skills = {};
 // Initialize firebase;
 const firebase = require('firebase-admin');
+const User = globalModel.users;
+const Joi = require('joi');
+const SkillsSchema = require('./../Validators/SkillsSchema');
 
 
 // Get All Users
@@ -44,24 +47,11 @@ skills.checkAdmin = async function (request, response)
 skills.getAllUsers = async function (request, response)
 {
     
-    let admin = await Admins.findAll({
-        where: {
-            admin_firebase_id: request['token']['user_id']
-        }
-    });
+    // let users = await firebase.auth().listUsers(1000);
+    // response.send(users);
+    let users = await User.findAll();
 
-    if(admin.length == 0) {
-        response.status(403);
-        responseHelper.setResponseError('No access!');
-        responseHelper.sendResponse(response);
-    }
-
-    firebase.auth().listUsers(1000).then((listUsersResult) => {
-        response.status(200);
-        responseHelper.setResponseData(listUsersResult);
-        responseHelper.sendResponse(response);
-    });
-     
+    response.send(users);
 }
 
 
@@ -70,19 +60,13 @@ skills.getSkills = async function (request, response)
 {
     // Create request query;
     let query = '';
-    
-    if(request.query['user_id']) {
-        let admin = await Admins.findAll({
-            where: {
-                admin_firebase_id: request['token']['user_id']
-            }
-        });
-    
-        if(admin.length == 0) {
-            response.status(403);
-            responseHelper.setResponseError('No access!');
-            responseHelper.sendResponse(response);
-        }
+    let userId = request.params.id
+    if(!request.params.id) {
+
+        response.status(400);
+        response.send({success:false,error:"Please set a user_id"});
+
+        return;
     }
 
     if (request.query['skillId'])
@@ -97,7 +81,7 @@ skills.getSkills = async function (request, response)
             'ON skills.id = userSkills.skillId ' +
             'JOIN skillsCategories ' +
             'ON skillsCategories.id = skills.categoryId ' +
-            'WHERE userSkills.userId = "' + (request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id']) + '" ' +
+            'WHERE userSkills.userId = "' + userId + '" ' +
             'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
             'ORDER BY skills.categoryId';
     }
@@ -116,112 +100,104 @@ skills.getSkills = async function (request, response)
             'WHERE userSkills.date = (' +
             'SELECT MAX(us.date) ' +
             'FROM userSkills AS us ' +
-            'WHERE userSkills.userId = "' + (request.query['user_id'] == undefined ? request['token']['user_id'] : request.query['user_id']) + '" ' +
+            'WHERE userSkills.userId = "' + userId + '" ' +
             'AND userSkills.skillId = userSkills.skillId ) ' +
             'GROUP BY userSkills.skillId ' +
             'ORDER BY skills.categoryId';
        
     }
 
-    // Send query and generate response;
-    let userSkills = await sequelize.query(query);
 
-    if (userSkills[0].length == 0) {
-        let skills = await Skills.findAll();
-        
-        
-        let queryString = "";
-        for(let i=0; i < skills.length; i++) {
-            queryString = queryString + `('${request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id']}', 1, 1, '', CURDATE() ,${skills[i]['id']}), `;
+    if(request.query['skillId'])
+    {
+
+        var where = {
+            userId:userId,
+            skillId:request.query['skillId']
         }
-       
-        queryString = queryString.slice(0,-2);
-        queryString += ';';
-
-        queryString = "INSERT INTO userSkills (userId, mark, disposition, comment, date ,skillId) VALUES " + queryString;
-
-        let res = await sequelize.query(queryString);
-
-        userSkills = await sequelize.query(query);
-
-        response.status(200);
-        responseHelper.setResponseData(userSkills[0]);
-        responseHelper.sendResponse(response);
-
-    } else {
-        response.status(200);
-        responseHelper.setResponseData(userSkills[0]);
-        responseHelper.sendResponse(response);
+        
+    }else{
+        var where = {
+            userId:userId
+        }
     }
+
+        UserSkills.findAll({
+            where:where,
+            include: [
+                {model:Skills, include:[SkillsCategories]}
+            ]
+        })
+        .then(skills => {
+            response.send(skills);
+        })
+        .catch(E => {
+            response.status(400);
+            response.send(E);
+        });
 };
 
 
-skills.updateSkill = async function(request, response)
-{
-
-};
 
 // Method for add skills;
 skills.addSkills = async function (request, response)
 {
 
-    console.log("TOKEN ------------> ", request['token']['user_id']);
     // Check request data;
-    if (!request['body']['mark'] || (request['body']['mark'] < -1 || request['body']['mark'] > 10))
-    {
-        response.status(400);
-        responseHelper.setResponseError('Mark must have value from 0 to 10!');
-        responseHelper.sendResponse(response);
+    Joi.validate(request.body,SkillsSchema.add, async function(Error,Data){
+        if(!Error)
+        {
+                // Try create or update skill;
+                let userSkills = await UserSkills.findOne({
+                    where: {
+                        userId: request['body']['userId'],
+                        skillId: request['body']['skillId']
+                    },
+                    include:[
+                        {model:Skills,include:[SkillsCategories]}
+                    ]
+                });
 
-        return;
-    }
-    console.log(request['body']['disposition']);
-    if (request['body']['disposition'] === undefined || (request['body']['disposition'] < -1 || request['body']['disposition'] > 10))
-    {
-        response.status(400);
-        responseHelper.setResponseError('Disposition must have value from 0 to 10!');
-        responseHelper.sendResponse(response);
+                if(userSkills && userSkills.mark != Data.mark)
+                {
+                    skillLogs.create({
+                        userId:userSkills.userId,
+                        skillId:userSkills.id,
+                        skill_old: userSkills.mark,
+                        skill_new: Data.mark
+                    });
 
-        return;
-    }
+                    if(Data.disposition)
+                    {
+                        var update = {
+                            mark:Data.mark,
+                            disposition: Data.disposition
+                        }
+                    }else{
+                        var update = {
+                            mark:Data.mark,
+                        }
+                    }
 
-    // Set user id from token;
-    request['body']['userId'] = request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'];
+                    userSkills.update(update);
+                    Emitter.emit('update_skill');
+                    response.send(userSkills);
 
-    // Remove unwanted data from request data;
-    delete request['body']['id'];
-    delete request['body']['date'];
+                }else{
+                    response.status(400);
+                    response.send({
+                        success:false,
+                        message:'Such skill for this user does not exist or updates a same value'
+                    });
+                }
 
-    // Try create or update skill;
-    let userSkills = await UserSkills.findOne({
-        where: {
-            userId: request['body']['userId'],
-            skillId: request['body']['skillId']
+
+        }else{
+            response.send({req:request.body,error:Error});
+            response.send(Error);
         }
     });
-
-    if(userSkills)
-    {
-        skillLogs.create({
-            userId:userSkills.userId,
-            skillId:userSkills.id,
-            skill_old: userSkills.mark,
-            skill_new: request.body.mark
-        });
-
-        userSkills.update({
-            mark:request.body.mark
-        });
-        Emitter.emit('update_skill');
-        response.send(userSkills);
-    }else{
-        response.status(400);
-        resposne.send({
-            success:false,
-            message:'Such skill for this user does not exist'
-        });
-    }
-
+    return;
 
 };
 
@@ -290,12 +266,11 @@ skills.createNewSkill = async function (request, response)
 }
 
 skills.getCategoriesSkills = async function (request, response) 
-{
+{   
+    response.send(request.body);
     try {
         let res = await SkillsCategories.findAll();
-        response.status(200);
-        responseHelper.setResponseData(res);
-        responseHelper.sendResponse(response);
+        response.send(res);
     } catch (error) {
         response.status(500);
         responseHelper.sendResponse(response);

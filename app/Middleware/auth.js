@@ -4,13 +4,16 @@ const firebase = require('firebase-admin');
 // Initialize response helper;
 const responseHelper = require('./../../helpers/response');
 const globalModel =  require('./../Models/index');
+const User = globalModel.users;
+
 const Admins = globalModel.admins;
+const jwt = require('jsonwebtoken');
 
 const authMiddleware = {
     // Method handler for intercept request with auth;
     auth: function (request, response, next)
     {
-        if (!request.headers['authorization'])
+        if (!'authorization' in request.headers)
         {
             response.status(400);
             responseHelper.setResponseError('Token does not exist!');
@@ -18,35 +21,48 @@ const authMiddleware = {
         }
         else
         {
-            firebase.auth().verifyIdToken(request.headers['authorization'].replace('Bearer ', '')).then((token) =>
-            {
-                request.token = token;
-                next();
-            }).catch((error) =>
-            {
-                response.status(401);
-                responseHelper.setResponseError(error['message']);
-                responseHelper.sendResponse(response);
+            let  token = request.headers.authorization;
+            token = token.replace('Bearer ','');
+            jwt.verify(token,process.env.JWT_KEY, async function(Error,Decoded){
+                if(!Error)
+                {   
+                    let user = await User.findOne({
+                        where:{
+                            name:Decoded.name,
+                            email:Decoded.email
+                        }
+                    });
+
+                    if(user)
+                    {
+                        request.body.auth = user;
+                        next();
+                    }else{
+                        response.status(400);
+                        response.send({success:false,error:'There are no such user founded'});
+                    }
+                    
+                    
+
+                }else{
+                    response.status(400);
+                    response.send({success:false,error:Error});
+                }
             });
+            
         }
     },
 
     admin:async function (request, response, next)
     {
-        if(request.query['user_id']) {
-            let admin = await Admins.findAll({
-                where: {
-                    admin_firebase_id: request['token']['user_id']
-                }
-            });
-
-            if(admin.length == 0) {
-                response.status(403);
-                responseHelper.setResponseError('No access!');
-                responseHelper.sendResponse(response);
-            }else{
-                next();
-            }
+        if(request.body.auth && request.body.auth.role == 1)
+        {
+            next();
+        }else{
+            
+            response.status(400);
+            response.send({success:false,error:"You are not admin",user:request.body.auth});
+        
         }
     }
 

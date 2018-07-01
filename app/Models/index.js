@@ -23,11 +23,15 @@ fs
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+db.users.hasMany(db.userSkills, {foreignKey:'userId'});
+db.users.hasMany(db.user_skills_logs, {foreignKey: 'userId'});
 
 db.skills.belongsTo(db.skillsCategories, { foreignKey: 'categoryId' });
+db.userSkills.belongsTo(db.users, {foreignKey: 'userId'});
 db.userSkills.belongsTo(db.skills, { foreignKey: 'skillId' });
 
 db.userSkills.hasMany(db.user_skills_logs, {foreignKey: 'skillId'});
 db.user_skills_logs.belongsTo(db.userSkills, {foreignKey: 'skillId'});
+db.user_skills_logs.belongsTo(db.users, {foreignKey: 'userId'});
 
 module.exports = db;
