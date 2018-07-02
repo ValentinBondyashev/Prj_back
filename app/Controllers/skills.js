@@ -124,7 +124,8 @@ skills.getSkills = async function (request, response)
         UserSkills.findAll({
             where:where,
             include: [
-                {model:Skills, include:[SkillsCategories]}
+                {model:Skills, include:[SkillsCategories]},
+                {model:User}
             ]
         })
         .then(skills => {
