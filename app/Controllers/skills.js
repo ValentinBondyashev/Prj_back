@@ -10,6 +10,7 @@ const skillLogs = globalModel.user_skills_logs;
 const sequelize = globalModel.sequelize;
 const Sequelize = globalModel.Sequelize;
 const Emitter = require('./../Events/OnSkillUpdate');
+
 // Initialize skills class;
 const skills = {};
 // Initialize firebase;
@@ -46,13 +47,11 @@ skills.checkAdmin = async function (request, response)
 // Get All Users
 skills.getAllUsers = async function (request, response)
 {
-    
-    // let users = await firebase.auth().listUsers(1000);
-    // response.send(users);
+
     let users = await User.findAll();
 
     response.send(users);
-}
+};
 
 
 // Method for get skills data;
@@ -69,43 +68,43 @@ skills.getSkills = async function (request, response)
         return;
     }
 
-    if (request.query['skillId'])
-    {
-        query =
-            'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
-            'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
-            'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
-            'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
-            'FROM userSkills ' +
-            'JOIN skills ' +
-            'ON skills.id = userSkills.skillId ' +
-            'JOIN skillsCategories ' +
-            'ON skillsCategories.id = skills.categoryId ' +
-            'WHERE userSkills.userId = "' + userId + '" ' +
-            'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
-            'ORDER BY skills.categoryId';
-    }
-    else
-    {
-        query =
-            'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
-            'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
-            'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
-            'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
-            'FROM userSkills ' +
-            'JOIN skills ' +
-            'ON skills.id = userSkills.skillId ' +
-            'JOIN skillsCategories ' +
-            'ON skillsCategories.id = skills.categoryId ' +
-            'WHERE userSkills.date = (' +
-            'SELECT MAX(us.date) ' +
-            'FROM userSkills AS us ' +
-            'WHERE userSkills.userId = "' + userId + '" ' +
-            'AND userSkills.skillId = userSkills.skillId ) ' +
-            'GROUP BY userSkills.skillId ' +
-            'ORDER BY skills.categoryId';
-       
-    }
+    // if (request.query['skillId'])
+    // {
+    //     query =
+    //         'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
+    //         'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
+    //         'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
+    //         'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
+    //         'FROM userSkills ' +
+    //         'JOIN skills ' +
+    //         'ON skills.id = userSkills.skillId ' +
+    //         'JOIN skillsCategories ' +
+    //         'ON skillsCategories.id = skills.categoryId ' +
+    //         'WHERE userSkills.userId = "' + userId + '" ' +
+    //         'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
+    //         'ORDER BY skills.categoryId';
+    // }
+    // else
+    // {
+    //     query =
+    //         'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
+    //         'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
+    //         'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
+    //         'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
+    //         'FROM userSkills ' +
+    //         'JOIN skills ' +
+    //         'ON skills.id = userSkills.skillId ' +
+    //         'JOIN skillsCategories ' +
+    //         'ON skillsCategories.id = skills.categoryId ' +
+    //         'WHERE userSkills.date = (' +
+    //         'SELECT MAX(us.date) ' +
+    //         'FROM userSkills AS us ' +
+    //         'WHERE userSkills.userId = "' + userId + '" ' +
+    //         'AND userSkills.skillId = userSkills.skillId ) ' +
+    //         'GROUP BY userSkills.skillId ' +
+    //         'ORDER BY skills.categoryId';
+    //
+    // }
 
 
     if(request.query['skillId'])
@@ -154,11 +153,12 @@ skills.addSkills = async function (request, response)
                         skillId: request['body']['skillId']
                     },
                     include:[
-                        {model:Skills,include:[SkillsCategories]}
+                        {model:Skills,include:[SkillsCategories]},
+                        {model:User}
                     ]
                 });
 
-                if(userSkills && userSkills.mark != Data.mark)
+                if(userSkills && userSkills.mark !== Data.mark)
                 {
                     skillLogs.create({
                         userId:userSkills.userId,
@@ -193,7 +193,7 @@ skills.addSkills = async function (request, response)
 
 
         }else{
-            response.send({req:request.body,error:Error});
+            response.send({success:false,error:Error});
             response.send(Error);
         }
     });
@@ -267,7 +267,7 @@ skills.createNewSkill = async function (request, response)
 
 skills.getCategoriesSkills = async function (request, response) 
 {   
-    response.send(request.body);
+
     try {
         let res = await SkillsCategories.findAll();
         response.send(res);

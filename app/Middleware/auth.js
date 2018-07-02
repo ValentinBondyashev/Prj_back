@@ -13,7 +13,7 @@ const authMiddleware = {
     // Method handler for intercept request with auth;
     auth: function (request, response, next)
     {
-        if (!'authorization' in request.headers)
+        if (!request.headers.authorization || request.headers.authorization === '')
         {
             response.status(400);
             responseHelper.setResponseError('Token does not exist!');
