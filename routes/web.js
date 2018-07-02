@@ -14,7 +14,7 @@ const UserController = require('./../app/Controllers/UserController');
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
 
-router.post('/dbinsert', UserController.userSkillsInsert);
+// router.post('/dbinsert', UserController.userSkillsInsert);
 // Add routes to router;
 
 router.get('/skills/categories', authMiddleware.auth, skills.getCategoriesSkills);
@@ -22,7 +22,7 @@ router.put('/skills', authMiddleware.auth.bind(authMiddleware),authMiddleware.ad
 router.post('/skills', authMiddleware.auth, skills.createNewSkill);
 router.get('/skills/list', skills.getSkillsList);
 router.get('/skills/all_users', skills.getAllUsers);
-router.get('/skills/check_admin', authMiddleware.auth, skills.checkAdmin);
+router.get('/skills/check_admin', authMiddleware.auth, UserController.isAdmin);
 
 router.get('/skills/:id', authMiddleware.auth.bind(authMiddleware),authMiddleware.admin, skills.getSkills);
 // Export router;

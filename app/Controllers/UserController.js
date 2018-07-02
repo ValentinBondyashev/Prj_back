@@ -98,23 +98,14 @@ const UserController = {
 			}
 		});
 	},
-	userSkillsInsert: async function (Request,Response)
-	{
-		let users = await User.findAll();
-		let skills = await Skill.findAll();
+	isAdmin: async function (Request,Response){
+        if(Request.body.auth.role === 1)
+		{
+            Response.send({isAdmin:true});
+		}else{
+            Response.send({isAdmin:false});
+		}
 
-			skills.map(skill => {
-
-				UserSkill.create({
-					skillId:skill.id,
-					mark:1,
-					disposition:1,
-					userId:9
-				})
-
-			})
-
-		Response.send(skills);	
 	}
 
 };
