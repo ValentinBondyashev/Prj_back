@@ -180,7 +180,7 @@ skills.addSkills = async function (request, response)
                         }
                     }
 
-                    userSkills.update(update);
+                    await userSkills.update(update);
                     Emitter.emit('update_skill');
                     response.send(userSkills);
 
@@ -292,5 +292,51 @@ skills.getSkillsLogs = async function()
     return JSON.stringify(logSkills);
 };
 
-// Export router;
+skills.matched = async function (Request, Response) {
+
+   const skills = Request.query.skills;
+
+   User.findAll({
+       include:[
+           {
+               model:UserSkills,
+               where: {
+                   skillId: skills,
+               },
+           }
+       ],
+   }).then(users => {
+
+      const UsersCompares = [];
+      for(let i = 0; i < users.length; i++) {
+
+          UsersCompares.push({
+              name:users[i].dataValues.name,
+              userSkills: users[i].dataValues.userSkills,
+              compare: []
+          });
+
+           for(let j = 0; j < users.length; j++) {
+               for(let k = 0; k < skills.length; k++) {
+
+
+                   let userMark = users[i].dataValues.userSkills[k];
+                   let compareUserMark = users[j].dataValues.userSkills[k];
+
+                   if( userMark && compareUserMark &&
+                       ('dataValues' in userMark && 'dataValues' in compareUserMark) &&
+                       ( userMark.dataValues.mark < compareUserMark.dataValues.mark )
+                   )
+                   {
+                       UsersCompares[i].compare.push({name:users[j].dataValues.name,userSkills: users[j].dataValues.userSkills});
+                       break;
+                   }
+               }
+           }
+       }
+
+       Response.send(UsersCompares)
+   });
+};
+
 module.exports = skills;
