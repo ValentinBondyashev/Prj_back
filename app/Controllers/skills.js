@@ -303,6 +303,7 @@ skills.matched = async function (Request, Response) {
                where: {
                    skillId: skills,
                },
+               include: [Skills]
            }
        ],
    }).then(users => {
