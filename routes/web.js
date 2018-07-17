@@ -23,7 +23,7 @@ router.post('/skills', authMiddleware.auth, skills.createNewSkill);
 router.get('/skills/list', skills.getSkillsList);
 router.get('/skills/all_users', skills.getAllUsers);
 router.get('/skills/check_admin', authMiddleware.auth, UserController.isAdmin);
-router.get('/skills/matched', skills.matched);
+router.get('/skills/matched',authMiddleware.auth.bind(authMiddleware),authMiddleware.admin, skills.matched);
 
 router.get('/skills/:id', authMiddleware.auth.bind(authMiddleware),authMiddleware.admin, skills.getSkills);
 // Export router;
