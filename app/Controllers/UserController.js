@@ -106,6 +106,17 @@ const UserController = {
             Response.send({isAdmin:false});
 		}
 
+	},
+	getUser: async function(Request, Response) {
+
+		let user = await User.findById(Request.params.id, {
+			include: [{
+				model:UserSkill,
+				include: [Skill]
+			}]
+		});
+
+		Response.send({success:true,data:user});
 	}
 
 };
