@@ -26,5 +26,7 @@ router.get('/skills/check_admin', authMiddleware.auth, UserController.isAdmin);
 router.get('/skills/matched',authMiddleware.auth.bind(authMiddleware),authMiddleware.admin, skills.matched);
 
 router.get('/skills/:id', authMiddleware.auth.bind(authMiddleware),authMiddleware.admin, skills.getSkills);
+
+router.get('/user/:id', authMiddleware.auth.bind(authMiddleware), UserController.getUser)
 // Export router;
 module.exports = router;
