@@ -101,7 +101,7 @@ const UserController = {
 		});
 	},
 	isAdmin: async function (Request,Response){
-        if(Request.body.auth.role === 1)
+        if(Request.auth.role === 1)
 		{
             Response.send({isAdmin:true});
 		}else{
