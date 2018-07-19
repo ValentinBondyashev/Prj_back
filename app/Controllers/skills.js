@@ -20,116 +20,25 @@ const Joi = require('joi');
 const SkillsSchema = require('./../Validators/SkillsSchema');
 
 
-// Get All Users
-skills.checkAdmin = async function (request, response)
-{
-    
-    let admin = await Admins.findAll({
-        where: {
-            admin_firebase_id: request['token']['user_id']
-        }
-    });
-
-    if(admin.length == 0) {
-        response.status(200);
-        responseHelper.setResponseError({isAdmin: false});
-        responseHelper.sendResponse(response);
-    } else {
-        response.status(200);
-        responseHelper.setResponseError({isAdmin: true});
-        responseHelper.sendResponse(response);
-    }
-
-   
-     
-}
-
-// Get All Users
-skills.getAllUsers = async function (request, response)
-{
-
-    let users = await User.findAll();
-
-    response.send(users);
-};
-
-
 // Method for get skills data;
 skills.getSkills = async function (request, response)
 {
-    // Create request query;
-    let query = '';
-    let userId = request.params.id
-    if(!request.params.id) {
+    let skillId = request.params.id;
+
+    if(!skillId) {
 
         response.status(400);
-        response.send({success:false,error:"Please set a user_id"});
-
+        response.send({success:false,error:"Please set a skill id"});
         return;
     }
 
-    // if (request.query['skillId'])
-    // {
-    //     query =
-    //         'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
-    //         'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
-    //         'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
-    //         'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
-    //         'FROM userSkills ' +
-    //         'JOIN skills ' +
-    //         'ON skills.id = userSkills.skillId ' +
-    //         'JOIN skillsCategories ' +
-    //         'ON skillsCategories.id = skills.categoryId ' +
-    //         'WHERE userSkills.userId = "' + userId + '" ' +
-    //         'AND userSkills.skillId = ' + request.query['skillId'] + ' ' +
-    //         'ORDER BY skills.categoryId';
-    // }
-    // else
-    // {
-    //     query =
-    //         'SELECT userSkills.id, userSkills.userId, userSkills.skillId, skills.title AS skillTitle, ' +
-    //         'skills.description AS skillDescription, skills.categoryId AS skillCategoryId, ' +
-    //         'skillsCategories.title AS skillCategoryTitle, skillsCategories.description AS skillCategoryDescription, ' +
-    //         'userSkills.mark, userSkills.disposition, userSkills.comment, userSkills.date ' +
-    //         'FROM userSkills ' +
-    //         'JOIN skills ' +
-    //         'ON skills.id = userSkills.skillId ' +
-    //         'JOIN skillsCategories ' +
-    //         'ON skillsCategories.id = skills.categoryId ' +
-    //         'WHERE userSkills.date = (' +
-    //         'SELECT MAX(us.date) ' +
-    //         'FROM userSkills AS us ' +
-    //         'WHERE userSkills.userId = "' + userId + '" ' +
-    //         'AND userSkills.skillId = userSkills.skillId ) ' +
-    //         'GROUP BY userSkills.skillId ' +
-    //         'ORDER BY skills.categoryId';
-    //
-    // }
-
-
-    if(request.query['skillId'])
-    {
-
-        var where = {
-            userId:userId,
-            skillId:request.query['skillId']
-        }
-        
-    }else{
-        var where = {
-            userId:userId
-        }
-    }
-
-        UserSkills.findAll({
-            where:where,
+        Skills.findById(skillId,{
             include: [
-                {model:Skills, include:[SkillsCategories]},
-                {model:User}
+                {model:SkillsCategories}
             ]
         })
-        .then(skills => {
-            response.send(skills);
+        .then(skill => {
+            response.send(skill);
         })
         .catch(E => {
             response.status(400);
@@ -137,7 +46,17 @@ skills.getSkills = async function (request, response)
         });
 };
 
+skills.delete = async function(Request, Response) {
+    let deletableSkill = await Skills.findById(Request.params.id);
 
+    if(deletableSkill) {
+        deletableSkill.destroy();
+        Response.send({ success: true, data: deletableSkill});
+    } else{
+        Response.status(400);
+        Response.send({success: false, error: 'You can not delete unexisted category'});
+    }
+};
 
 // Method for add skills;
 skills.addSkills = async function (request, response)
@@ -212,58 +131,40 @@ skills.getSkillsList = function (request, response)
     });
 };
 
-skills.createNewSkill = async function (request, response) 
+skills.createNewSkill = async function (Request, Response)
 {
-    if(request.query['user_id']) {
-        let admin = await Admins.findAll({
-            where: {
-                admin_firebase_id: request['token']['user_id']
-            }
-        });
-    
-        if(admin.length == 0) {
-            response.status(403);
-            responseHelper.setResponseError('No access!');
-            responseHelper.sendResponse(response);
-        }
-    }
-    let skillTitle = request['body']['skillTitle'];
 
-    try {
-        let needSkill = await Skills.find({
-            where: {
-                title: skillTitle
-            }
-        });
-        let skill = {};
-        if(needSkill == null) {
-            let newSkill = {
-                title: skillTitle,
-                description: "",
-                categoryId: request['body']['categoryId']
-            };
-            skill = await Skills.create(newSkill);
-        } else {
-            skill = await Skills.find({
-                id: needSkill['id']
+    Joi.validate(Request.body, SkillsSchema.create, async function(Error, Data) {
+        if(!Error) {
+
+            let needSkill = await Skills.find({
+                where: {
+                    title: Data.title
+                }
             });
+            var skill = {};
+            if(needSkill == null) {
+                let newSkill = {
+                    title: Data.title,
+                    description: Data.description,
+                    categoryId: Data.category_id
+                };
+                skill = await Skills.create(newSkill);
+            } else {
+                skill = await Skills.find({
+                    id: needSkill['id']
+                });
+            }
+            Response.status(200);
+            Response.send({success:true,data:skill});
+        } else {
+            Response.status(500);
+            Response.send({success:false,error:Error});
         }
+    });
 
-        let newSkill = await UserSkills.create({
-            userId: request.query['user_id'] == undefined ? request['token']['user_id'] :  request.query['user_id'],
-            mark: request['body']['mark'] ,
-            disposition: request['body']['disposition'],
-            comment: request['body']['comment'],
-            skillId: skill['id']
-        });
-        response.status(200);
-        responseHelper.setResponseData(newSkill);
-        responseHelper.sendResponse(response);
 
-    } catch (error) {
-        response.status(500);
-        responseHelper.sendResponse(response);
-    }
+
 }
 
 skills.getCategoriesSkills = async function (request, response) 

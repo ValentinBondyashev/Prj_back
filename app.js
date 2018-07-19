@@ -12,9 +12,9 @@ let  WebSocketServer = new WebSocket({port: 8800});
 
 WebSocketServer.on('connection', function connection(ws) {
 
-
 });
 
+require('./app/Models/connection');
 
 OnSkillUpdateEvent.on('update_skill', async function(){
     var skills = await logSkills();

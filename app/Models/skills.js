@@ -13,7 +13,7 @@ module.exports = function (sequelize,Sequelize) {
         },
         date: {
             type: Sequelize.DATE,
-            defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+            defaultValue: Sequelize.NOW
         }
     }, {
         timestamps: false

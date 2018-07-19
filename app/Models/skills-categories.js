@@ -6,16 +6,17 @@ module.exports = function (sequelize,Sequelize) {
             primaryKey: true
         },
         title: {
-            type: Sequelize.STRING(64)
+            type: Sequelize.STRING(64),
+            unique:true
         },
         description: {
             type: Sequelize.STRING(256)
         },
         date: {
             type: Sequelize.DATE,
-            defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+            defaultValue: Sequelize.NOW
         }
     }, {
         timestamps: false
     });
-}
+};

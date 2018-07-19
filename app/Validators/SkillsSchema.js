@@ -9,7 +9,13 @@ const AddSchema = Joi.object({
     auth: Joi.any().optional()
 });
 
+const CreateSchema = Joi.object({
+    title: Joi.string().required(),
+    category_id: Joi.number().min(1).required(),
+    description: Joi.string()
+});
 
 module.exports = {
 	add: AddSchema,
+    create: CreateSchema
 }

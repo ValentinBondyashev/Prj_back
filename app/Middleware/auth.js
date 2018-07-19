@@ -35,7 +35,7 @@ const authMiddleware = {
 
                     if(user)
                     {
-                        request.body.auth = user;
+                        request.auth = user;
                         next();
                     }else{
                         response.status(400);
@@ -55,7 +55,7 @@ const authMiddleware = {
 
     admin:async function (request, response, next)
     {
-        if(request.body.auth && request.body.auth.role == 1)
+        if(request.auth && request.auth.role == 1)
         {
             next();
         }else{

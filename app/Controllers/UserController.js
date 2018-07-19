@@ -5,6 +5,9 @@ const GlobalModel = require('./../Models/index');
 const User = GlobalModel.users;
 const Skill = GlobalModel.skills;
 const UserSkill = GlobalModel.userSkills;
+const SkillCategory = GlobalModel.skillsCategories;
+const SkillLogs = GlobalModel.user_skills_logs;
+
 /*
 	VALIDATORS
 */
@@ -16,7 +19,6 @@ const Joi = require('joi');
 */
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQWRtaW4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTUzMDQ1MDc2M30.TX3eLlCPZ9JpsOejmugDT0jLsUyATUpGBJPznAorKS4
 
 const UserController = {
 
@@ -117,8 +119,123 @@ const UserController = {
 		});
 
 		Response.send({success:true,data:user});
-	}
+	},
+	getAllUsers: async function(Request, Response) {
 
+		let users = await User.findAll();
+        Response.send(users);
+
+	},
+	getUserSkills: async function(Request, Response) {
+
+		try {
+            Skill.findAll({
+                include: [
+                    {
+                        model:UserSkill,
+                        where:{
+                            userId:Request.params.id
+                        }
+                    },
+                    {
+                        model: SkillCategory
+                    }
+                ],
+            }).then(skills => {
+                Response.send(skills);
+            })
+		} catch (Error) {
+
+			Response.status(400);
+			Response.send({success:false, error: Error});
+		}
+
+	},
+	getUserSkillById: async function(Request, Response) {
+        try {
+            Skill.findById(Request.params.id, {
+                include: [
+                    {
+                        model:UserSkill,
+                        where:{
+                            userId:Request.params.user_id,
+                        }
+                    },
+					{
+						model: SkillCategory
+					}
+                ],
+            }).then(skills => {
+                Response.send(skills);
+            })
+        } catch (Error) {
+
+            Response.status(400);
+            Response.send({success:false, error: Error});
+        }
+	},
+	getUserSkillsLogs: async function(Request, Response) {
+
+		try{
+            SkillLogs.findAll({
+                where:{
+                    userId:Request.params.id
+                },
+				include: [
+					{
+						model:UserSkill,
+						include: [
+							{
+								model:Skill,
+								include: SkillCategory
+							}
+						]
+					}
+				]
+            }).then( skills => {
+            	Response.send({success:true, data:skills})
+			}).catch( Error => {
+                Response.status(400);
+                Response.send({success:false, error: Error})
+			});
+		} catch (Error) {
+			Response.status(400);
+			Response.send({success:false, error: Error})
+		}
+	},
+	getUserSkillLogById: async function(Request, Response) {
+
+        try{
+            SkillLogs.findAll({
+                where:{
+                    userId:Request.params.user_id
+                },
+                include: [
+                    {
+                        model:UserSkill,
+						where:{
+                        	skillId: Request.params.id
+						},
+                        include: [
+                            {
+                                model:Skill,
+                                include: SkillCategory
+                            }
+                        ]
+                    }
+                ]
+            }).then( skills => {
+                Response.send({success:true, data:skills})
+            }).catch( Error => {
+                Response.status(400);
+                Response.send({success:false, error: Error})
+            });
+        } catch (Error) {
+            Response.status(400);
+            Response.send({success:false, error: Error})
+        }
+
+	}
 };
 
 

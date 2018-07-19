@@ -21,7 +21,7 @@ module.exports = function (sequelize,Sequelize) {
             type: Sequelize.STRING(256)
         },
         date: {
-            type: Sequelize.DATEONLY,
+            type: Sequelize.DATE,
             defaultValue: Sequelize.NOW
         },
         skillId: {
