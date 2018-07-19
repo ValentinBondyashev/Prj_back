@@ -50,6 +50,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.raw());
 
 
+app.use('/assets/images',express.static('assets/images'));
 // Create routes;
 app.use(require('./routes/web'));
 
