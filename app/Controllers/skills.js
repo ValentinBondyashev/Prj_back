@@ -66,50 +66,58 @@ skills.addSkills = async function (request, response)
     Joi.validate(request.body,SkillsSchema.add, async function(Error,Data){
         if(!Error)
         {
-                // Try create or update skill;
-                let userSkills = await UserSkills.findOne({
-                    where: {
-                        userId: request['body']['userId'],
-                        skillId: request['body']['skillId']
-                    },
-                    include:[
-                        {model:Skills,include:[SkillsCategories]},
-                        {model:User}
-                    ]
+
+            if(!Data.disposition && !Data.mark) {
+                response.status(400);
+                response.send({
+                    success:false,
+                    message:'No field to update'
+                });
+                return;
+            }
+            // Try create or update skill;
+            let userSkills = await UserSkills.findOne({
+                where: {
+                    userId: request['body']['userId'],
+                    skillId: request['body']['skillId']
+                },
+                include:[
+                    {model:Skills,include:[SkillsCategories]},
+                    {model:User}
+                ]
+            });
+
+            if(userSkills)
+            {
+                skillLogs.create({
+                    userId:userSkills.userId,
+                    skillId:userSkills.id,
+                    skill_old: userSkills.mark,
+                    skill_new: Data.mark
                 });
 
-                if(userSkills && userSkills.mark !== Data.mark)
+                if(Data.disposition)
                 {
-                    skillLogs.create({
-                        userId:userSkills.userId,
-                        skillId:userSkills.id,
-                        skill_old: userSkills.mark,
-                        skill_new: Data.mark
-                    });
-
-                    if(Data.disposition)
-                    {
-                        var update = {
-                            mark:Data.mark,
-                            disposition: Data.disposition
-                        }
-                    }else{
-                        var update = {
-                            mark:Data.mark,
-                        }
+                    var update = {
+                        disposition: Data.disposition
                     }
-
-                    await userSkills.update(update);
-                    Emitter.emit('update_skill');
-                    response.send(userSkills);
-
                 }else{
-                    response.status(400);
-                    response.send({
-                        success:false,
-                        message:'Such skill for this user does not exist or updates a same value'
-                    });
+                    var update = {
+                        mark:Data.mark,
+                    }
                 }
+
+                await userSkills.update(update);
+                Emitter.emit('update_skill');
+                response.send(userSkills);
+
+            }else{
+                response.status(400);
+                response.send({
+                    success:false,
+                    message:'Such skill for this user does not exist or updates a same value'
+                });
+            }
 
 
         }else{
