@@ -157,14 +157,37 @@ skills.createNewSkill = async function (Request, Response)
                     description: Data.description,
                     categoryId: Data.category_id
                 };
-                skill = await Skills.create(newSkill);
+
+                Skills.create(newSkill).then( skill => {
+                    User.findAll().then( users => {
+
+                        let userSkills = [];
+
+                        for(let user of users) {
+                            userSkills.push({
+                                userId: user.id,
+                                mark: 1,
+                                skillId: skill.id
+                            });
+                        }
+
+                        UserSkills.bulkCreate(userSkills, {}).then( () => {
+                            Response.status(200);
+                            Response.send({success:true,data:skill});
+                        });
+
+                    })
+                });
+
             } else {
                 skill = await Skills.find({
                     id: needSkill['id']
                 });
+
+                Response.status(200);
+                Response.send({success:true,data:skill});
             }
-            Response.status(200);
-            Response.send({success:true,data:skill});
+
         } else {
             Response.status(500);
             Response.send({success:false,error:Error});
