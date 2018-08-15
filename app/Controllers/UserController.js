@@ -83,9 +83,22 @@ const UserController = {
 						email:user.email
 					},process.env.JWT_KEY);
 
+					Skill.findAll().then( async skills => {
+						let userSkills = [];
 
-					Response.send({success:true,token: token});
+						for(let skill of skills)
+						{
+                            userSkills.push({
+                                userId: user.id,
+                                mark: 1,
+                                skillId: skill.id
+                            });
+						}
 
+						await UserSkill.bulkCreate(userSkills);
+
+                        Response.send({success:true,token: token});
+					});
 				})
 				.catch(E => {
 					Response.status(400);

@@ -67,7 +67,7 @@ skills.addSkills = async function (request, response)
         if(!Error)
         {
 
-            if(!Data.disposition && !Data.mark) {
+            if(!Data.disposition && !Data.mark && !Data.comment) {
                 response.status(400);
                 response.send({
                     success:false,
@@ -96,16 +96,9 @@ skills.addSkills = async function (request, response)
                     skill_new: Data.mark
                 });
 
-                if(Data.disposition)
-                {
-                    var update = {
-                        disposition: Data.disposition
-                    }
-                }else{
-                    var update = {
-                        mark:Data.mark,
-                    }
-                }
+                let update = Data;
+                delete update.skillId;
+                delete update.userId;
 
                 await userSkills.update(update);
                 Emitter.emit('update_skill');
