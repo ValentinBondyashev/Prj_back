@@ -43,7 +43,7 @@ router.get('/category', authMiddleware.auth, CategoryController.getAll);
 *   SKILLS FUNCTIONS ROUTES
 *
 * */
-router.put('/skills', authMiddleware.auth.bind(authMiddleware),authMiddleware.admin, SkillsController.addSkills);
+router.put('/skills', authMiddleware.auth.bind(authMiddleware), SkillsController.addSkills);
 router.post('/skills', authMiddleware.auth, SkillsController.createNewSkill);
 router.delete('/skills/:id', authMiddleware.auth, authMiddleware.admin, SkillsController.delete);
 router.get('/skills/categories', authMiddleware.auth, SkillsController.getCategoriesSkills);
